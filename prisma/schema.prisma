@@ -1,0 +1,170 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model
+model User {
+  id                String      @id @default(cuid())
+  email             String      @unique
+  password          String
+  fullName          String
+  avatar            String?
+  educationLevel    String      @default("HIGH_SCHOOL") // HIGH_SCHOOL, UNDERGRADUATE, POSTGRADUATE
+  institution       String?
+  phone             String?
+  bio               String?
+  isAdmin           Boolean     @default(false)
+  isActive          Boolean     @default(true)
+  emailVerified     Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  deletedAt         DateTime?
+
+  // Relations
+  assignments       Assignment[]
+  notes             Note[]
+  questions         Question[]
+  uploads           PaperUpload[]
+  sessions          Session[]
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+// Session Model for Authentication
+model Session {
+  id        String   @id @default(cuid())
+  sessionToken String  @unique
+  userId    String
+  expires   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Assignment Model
+model Assignment {
+  id                String      @id @default(cuid())
+  userId            String
+  title             String
+  topic             String
+  subject           String
+  wordCount         Int
+  educationLevel    String      // HIGH_SCHOOL, UNDERGRADUATE, POSTGRADUATE
+  format            String      // ESSAY, REPORT, RESEARCH_PAPER
+  content           String      @db.Text
+  introduction      String      @db.Text
+  conclusion        String      @db.Text
+  references        String[]    @default([])
+  plagiarismScore   Float       @default(0) // 0-100%
+  status            String      @default("DRAFT") // DRAFT, COMPLETED, SUBMITTED
+  exportFormats     String[]    @default(["PDF", "DOCX"])
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Notes Model
+model Note {
+  id                String      @id @default(cuid())
+  userId            String
+  topic             String
+  subject           String
+  content           String      @db.Text
+  keyPoints         String[]    @default([])
+  difficulty        String      @default("INTERMEDIATE") // BEGINNER, INTERMEDIATE, ADVANCED
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Question & Answer Model
+model Question {
+  id                String      @id @default(cuid())
+  userId            String
+  topic             String
+  subject           String
+  marks             Int         // 2, 5, 10
+  question          String      @db.Text
+  answer            String      @db.Text
+  explanation       String?     @db.Text
+  difficulty        String      @default("MEDIUM") // EASY, MEDIUM, HARD
+  type              String      @default("SHORT") // SHORT, MEDIUM, LONG
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([marks])
+  @@index([createdAt])
+}
+
+// Paper Upload Model
+model PaperUpload {
+  id                String      @id @default(cuid())
+  userId            String
+  fileName          String
+  filePath          String      @db.Text
+  subject           String
+  year              Int?
+  board             String?
+  importantTopics   String[]    @default([])
+  analysis          String?     @db.Text
+  fileSize          Int
+  uploadedAt        DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([uploadedAt])
+}
+
+// Admin Log Model
+model AdminLog {
+  id                String      @id @default(cuid())
+  action            String      // USER_CREATED, USER_DELETED, etc.
+  userId            String?
+  details           String      @db.Text
+  ipAddress         String?
+  createdAt         DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}
+
+// API Usage Tracking
+model ApiUsage {
+  id                String      @id @default(cuid())
+  userId            String
+  endpoint          String
+  method            String
+  tokens            Int         @default(0)
+  cost              Float       @default(0)
+  responseTime      Int         // milliseconds
+  createdAt         DateTime    @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
