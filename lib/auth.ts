@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import prisma from './prisma';
+import { Prisma } from '@prisma/client';
 import { generateToken, verifyToken } from './jwt';
 import { User } from '@/types';
 
@@ -45,10 +46,13 @@ export const registerUser = async (
       },
     });
 
-    // Generate token
-    const token = generateToken(user);
+    // Safely cast Prisma user to custom User type
+    const appUser = user as unknown as User;
 
-    return { user, token };
+    // Generate token
+    const token = generateToken(appUser);
+
+    return { user: appUser, token };
   } catch (error) {
     console.error('Registration error:', error);
     return null;
@@ -80,10 +84,13 @@ export const authenticateUser = async (
       throw new Error('User account is inactive');
     }
 
-    // Generate token
-    const token = generateToken(user);
+    // Safely cast Prisma user to custom User type
+    const appUser = user as unknown as User;
 
-    return { user, token };
+    // Generate token
+    const token = generateToken(appUser);
+
+    return { user: appUser, token };
   } catch (error) {
     console.error('Authentication error:', error);
     return null;
@@ -95,7 +102,10 @@ export const getUserById = async (userId: string): Promise<User | null> => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
-    return user || null;
+    
+    if (!user) return null;
+    
+    return user as unknown as User;
   } catch (error) {
     console.error('Error fetching user:', error);
     return null;
@@ -104,21 +114,14 @@ export const getUserById = async (userId: string): Promise<User | null> => {
 
 export const updateUserProfile = async (
   userId: string,
-  data: Partial<User>
+  data: Prisma.UserUpdateInput 
 ): Promise<User | null> => {
   try {
     const user = await prisma.user.update({
       where: { id: userId },
-      data: {
-        fullName: data.fullName,
-        avatar: data.avatar,
-        educationLevel: data.educationLevel,
-        institution: data.institution,
-        phone: data.phone,
-        bio: data.bio,
-      },
+      data, 
     });
-    return user;
+    return user as unknown as User; 
   } catch (error) {
     console.error('Error updating user:', error);
     return null;
