@@ -19,7 +19,7 @@
     "typescript": "^5.0.0",
     "@prisma/client": "^5.7.0",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.1.2",
+    "jsonwebtoken": "^9.0.2",
     "next-auth": "^4.24.0",
     "openai": "^4.24.0",
     "axios": "^1.6.0",
