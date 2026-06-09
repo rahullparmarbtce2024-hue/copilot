@@ -4,7 +4,7 @@ export interface User {
   email: string;
   fullName: string;
   avatar?: string | null;
-  educationLevel: 'HIGH_SCHOOL' | 'UNDERGRADUATE' | 'POSTGRADUATE';
+ educationLevel: (educationLevel || 'HIGH_SCHOOL') as any;
   institution?: string | null;
   phone?: string | null;
   bio?: string | null;
